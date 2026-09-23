@@ -52,7 +52,7 @@
   "publish": [
     {
       "provider": "github",
-      "owner": "webadderall",
+      "owner": "markhiltonapps",
       "repo": "Recordly",
       "tagNamePrefix": "v",
       "publishAutoUpdate": true
