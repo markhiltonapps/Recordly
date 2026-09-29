@@ -1,0 +1,810 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recordly · Screen recorder and editor · Neato Ventures</title>
+<meta name="description" content="Recordly is a free, open-source desktop screen recorder and editor for walkthroughs, demos and product videos. Download it for Windows or Linux.">
+<meta name="theme-color" content="#F6F5EE">
+<link rel="icon" type="image/png" href="media/icon-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300..700&display=swap">
+<style>
+:root{
+  --cream:#F6F5EE; --ink:#291A14; --teal:#45C4C2; --orange:#F75A33; --mustard:#F2C84A;
+  --retro:#804C37; --orange-ink:#A53012; --teal-ink:#1E6B6B; --plate:#F0EEE6;
+  --border:#CFC2BE; --bezel:#2A1B14; --phosphor:#A8F7C9;
+  --mono:"Space Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --sans:"Outfit",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --shadow:5px 5px 0 rgba(128,76,55,.18);
+  --shadow-hover:7px 7px 0 rgba(69,196,194,.55);
+  --gutter:clamp(16px,4vw,40px);
+  --max:1200px;
+  --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .16 0 0 0 0 .10 0 0 0 0 .08 .3 0 0 0 -.12'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --scan:repeating-linear-gradient(0deg,rgba(41,26,20,.04) 0 2px,transparent 2px 4px);
+  color-scheme:light;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:84px;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--cream) var(--grain);color:var(--ink);font-family:var(--sans);font-size:1.0625rem;font-weight:400;line-height:1.55;overflow-x:hidden}
+img,svg{display:block;max-width:100%}
+a{color:inherit}
+p{margin:0 0 1em;max-width:68ch}
+h1,h2,h3,h4{font-family:var(--mono);font-weight:700;text-transform:uppercase;margin:0;line-height:1.12}
+:focus-visible{outline:3px solid var(--teal-ink);outline-offset:3px;border-radius:4px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.skip{position:absolute;left:16px;top:-60px;z-index:100;background:var(--ink);color:var(--cream);font:700 .8125rem/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;padding:16px 18px;min-height:44px;border-radius:8px;text-decoration:none}
+.skip:focus{top:12px}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 var(--gutter)}
+
+/* type roles */
+.eyebrow{font:700 .75rem/1.4 var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--teal-ink);margin:0 0 16px}
+.rule{display:block;width:72px;height:2px;background:var(--retro);margin:0 0 20px;opacity:.7}
+.h-section{font-size:clamp(1.625rem,3.2vw,2.5rem);letter-spacing:.02em}
+.lede{font-size:clamp(1.125rem,1.6vw,1.25rem);color:var(--ink);margin-top:16px}
+.label{font:700 .75rem/1.4 var(--mono);letter-spacing:.2em;text-transform:uppercase}
+.mono{font-family:var(--mono)}
+
+/* wordmark + atom */
+.brand{display:inline-flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);padding:7px 0;min-height:44px}
+.wm{font:700 .9375rem/1 var(--mono);letter-spacing:.1em;white-space:nowrap}
+.wm .us{color:var(--orange)}
+.atom{width:30px;height:30px;flex:none;transition:transform .6s ease}
+.brand:hover .atom{transform:rotate(180deg)}
+
+/* nav — the one glass surface */
+.nav{position:sticky;top:0;z-index:50;background:rgba(246,245,238,.72);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:2px solid var(--border)}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:64px}
+.nav ul{list-style:none;display:flex;gap:clamp(12px,3vw,36px);margin:0;padding:0}
+.nav a.nl{font:700 .75rem/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;text-decoration:none;padding:0;min-height:44px;display:inline-flex;align-items:center;border-bottom:2px solid transparent}
+.nav a.nl:hover{border-bottom-color:var(--teal)}
+@media (max-width:760px){.nav .hide-sm{display:none}}
+@media (max-width:420px){.nav .hide-xs{display:none}.wm{font-size:.875rem}}
+
+/* buttons: Googie */
+.btn{display:inline-flex;flex-direction:column;justify-content:center;gap:4px;font:700 .875rem/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;text-decoration:none;padding:15px 24px;border:2px solid var(--retro);border-radius:10px;color:var(--ink);background:transparent;transition:transform .2s ease,box-shadow .2s ease,background-color .2s ease;min-height:48px}
+.btn small{font:400 .75rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 rgba(128,76,55,.35)}
+.btn:active{transform:translate(1px,1px);box-shadow:none}
+.btn-primary{background:var(--orange);border-color:var(--orange);color:var(--ink);box-shadow:4px 4px 0 var(--retro)}
+.btn-primary:hover{box-shadow:6px 6px 0 var(--retro)}
+.btn-primary:active{box-shadow:1px 1px 0 var(--retro)}
+.btn-row{display:flex;flex-wrap:wrap;gap:16px;align-items:stretch;margin-top:28px}
+
+/* status chips: one colour each */
+.chip{display:inline-flex;align-items:center;gap:8px;font:700 .75rem/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;padding:6px 10px 6px 9px;border-radius:999px;white-space:nowrap}
+.chip::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;flex:none}
+.chip-live{color:var(--orange-ink);border:2px solid var(--orange)}
+.chip-live::before{background:var(--orange)}
+.chip-soon{background:var(--mustard);color:var(--ink);border:2px solid var(--mustard)}
+.chip-soon::before{background:var(--ink);opacity:.55}
+
+/* Googie card */
+.card{background:var(--plate);border:2px solid var(--border);border-radius:12px;box-shadow:var(--shadow);transition:transform .25s ease,box-shadow .25s ease}
+.card:hover{transform:translate(-2px,-2px);box-shadow:var(--shadow-hover)}
+
+/* ================= HERO (Paper) ================= */
+.hero{position:relative;padding:clamp(40px,7vw,88px) 0 clamp(56px,8vw,104px);overflow:hidden}
+.hero-grid{display:grid;gap:clamp(40px,5vw,64px);align-items:center}
+@media (min-width:1080px){.hero-grid{grid-template-columns:minmax(0,11fr) minmax(0,13fr)}}
+.hero-atom{position:absolute;right:-140px;top:-120px;width:560px;height:560px;opacity:.5;pointer-events:none;animation:spin 140s linear infinite}
+.product{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.product img{width:44px;height:44px;border-radius:11px;box-shadow:3px 3px 0 rgba(128,76,55,.2)}
+.product .label{color:var(--ink)}
+.product .by{display:block;font:400 .75rem/1.4 var(--mono);letter-spacing:.1em;color:var(--ink);text-transform:uppercase}
+.h-hero{font-size:clamp(2rem,3.6vw,2.9rem);letter-spacing:.02em;line-height:1.06}
+.hero .lede{max-width:46ch}
+.hero-note{font-size:.9375rem;line-height:1.9;color:var(--ink);margin-top:22px}
+.hero-note a{color:var(--ink);text-decoration-thickness:1px;text-underline-offset:3px;padding:8px 0}
+.mac-note,.mobile-note{display:none}
+[data-os="mac"] .mac-note,[data-mobile] .mobile-note{display:block}
+[data-os="mac"] #hero-alt{display:none}
+.nw{white-space:nowrap}
+@media (max-width:560px){.btn-row .btn{flex:1 1 100%}}
+
+/* ---- editor illustration ---- */
+.editor{margin:0;position:relative;background:var(--bezel);border:2px solid var(--bezel);border-radius:14px;box-shadow:8px 8px 0 rgba(128,76,55,.22);overflow:hidden;color:var(--cream)}
+.ed-bar{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid rgba(246,245,238,.12)}
+.dots{display:flex;gap:6px}
+.dots i{width:10px;height:10px;border-radius:50%;display:block}
+.dots i:nth-child(1){background:var(--cream)}.dots i:nth-child(2){background:var(--mustard)}.dots i:nth-child(3){background:var(--teal)}
+.ed-bar img{width:18px;height:18px;border-radius:5px}
+.ed-title{font:700 .75rem/1 var(--mono);letter-spacing:.14em;color:var(--cream);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ed-meta{margin-left:auto;font:400 .75rem/1 var(--mono);letter-spacing:.12em;color:var(--phosphor);white-space:nowrap}
+.ed-body{display:grid;grid-template-columns:minmax(0,1fr) 172px;gap:0}
+.stage{position:relative;margin:12px;border-radius:8px;overflow:hidden;aspect-ratio:16/9;background:var(--cream)}
+.stage svg{width:100%;height:100%}
+.stage::after{content:"";position:absolute;inset:0;background:var(--scan);pointer-events:none}
+.zoom-tag{position:absolute;left:38.75%;top:36.67%;transform:translate(-2px,calc(-100% - 4px));background:var(--teal);color:var(--bezel);font:700 .75rem/1 var(--mono);letter-spacing:.06em;padding:5px 7px;border-radius:5px;white-space:nowrap}
+.panel{border-left:1px solid rgba(246,245,238,.12);padding:14px 14px 12px;display:flex;flex-direction:column;gap:14px}
+.panel .ph{font:700 .75rem/1 var(--mono);letter-spacing:.2em;color:var(--phosphor)}
+.set{display:grid;gap:7px}
+.set .k{display:flex;justify-content:space-between;gap:8px;font:400 .75rem/1 var(--mono);letter-spacing:.08em;color:rgba(246,245,238,.85)}
+.set .k b{color:var(--cream);font-weight:700}
+.slider{position:relative;height:4px;border-radius:2px;background:rgba(246,245,238,.18)}
+.slider::before{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--v);border-radius:2px;background:var(--teal)}
+.slider::after{content:"";position:absolute;left:var(--v);top:50%;width:12px;height:12px;border-radius:50%;background:var(--cream);transform:translate(-50%,-50%);border:2px solid var(--teal)}
+.toggle{width:28px;height:16px;border-radius:999px;background:var(--teal);position:relative;flex:none}
+.toggle::after{content:"";position:absolute;right:2px;top:2px;width:12px;height:12px;border-radius:50%;background:var(--bezel)}
+.set .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.swatches{display:flex;gap:6px}
+.swatches i{display:block;width:22px;height:16px;border-radius:4px;border:1px solid rgba(246,245,238,.25)}
+.swatches i:nth-child(1){background:linear-gradient(180deg,#8fd6d3,#F6F5EE 70%);outline:2px solid var(--phosphor);outline-offset:1px}
+.swatches i:nth-child(2){background:var(--mustard)}
+.swatches i:nth-child(3){background:var(--retro)}
+.swatches i:nth-child(4){background:var(--cream)}
+@media (max-width:620px){.ed-body{grid-template-columns:1fr}.panel{display:none}.ed-meta{display:none}}
+
+/* timeline */
+.tl{border-top:1px solid rgba(246,245,238,.12);padding:10px 12px 14px}
+.tl-head{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.tl-play{width:26px;height:26px;border-radius:50%;border:2px solid var(--phosphor);display:grid;place-items:center;flex:none}
+.tl-play svg{width:10px;height:10px}
+.tl-tc{font:400 .75rem/1 var(--mono);letter-spacing:.06em;color:rgba(246,245,238,.8);white-space:nowrap}
+.tl-tc b{color:var(--phosphor);font-weight:700}
+.tl-meta{margin-left:auto;font:700 .75rem/1 var(--mono);letter-spacing:.14em;color:var(--phosphor);white-space:nowrap}
+.tl-grid{--lab:68px;display:grid;grid-template-columns:var(--lab) minmax(0,1fr);grid-template-rows:22px repeat(3,26px);row-gap:6px;position:relative}
+.tl-lab{font:400 .75rem/26px var(--mono);letter-spacing:.1em;color:rgba(246,245,238,.7)}
+.lane{position:relative;height:26px;border-radius:5px;background:rgba(246,245,238,.06)}
+.ruler{height:22px;background:repeating-linear-gradient(90deg,rgba(246,245,238,.28) 0 1px,transparent 1px calc(100%/13)) left bottom/100% 6px no-repeat;border-radius:0}
+.ruler span{position:absolute;left:calc(var(--x)*1%);top:0;font:400 .75rem/1 var(--mono);color:rgba(246,245,238,.8);transform:translateX(-50%)}
+.ruler span:first-child{transform:none}
+.clip{position:absolute;inset:0;border-radius:5px;background:var(--retro) repeating-linear-gradient(90deg,rgba(246,245,238,.16) 0 26px,transparent 26px 28px);border:1px solid rgba(246,245,238,.2)}
+.rg{position:absolute;z-index:2;top:0;bottom:0;left:calc(var(--a)*1%);width:calc((var(--b) - var(--a))*1%);border-radius:5px;display:flex;align-items:center;padding:0 6px;overflow:hidden}
+.rg span{font:700 .75rem/1 var(--mono);white-space:nowrap}
+.rg.zoom{background:var(--teal);color:var(--bezel)}
+.rg.speed{background:var(--mustard);color:var(--bezel)}
+.rg.trim{background:rgba(42,27,20,.78) repeating-linear-gradient(135deg,rgba(246,245,238,.28) 0 3px,transparent 3px 8px);border:1px dashed var(--cream);justify-content:center;padding:0 2px}
+.rg.trim span{color:var(--cream);background:var(--bezel);padding:2px 3px;border-radius:3px}
+.rg.ghost{border:1px dashed rgba(69,196,194,.8);background:transparent;color:var(--teal)}
+.wave{position:absolute;inset:3px 4px;width:calc(100% - 8px);height:20px}
+.ph-col{z-index:1;position:absolute;left:var(--lab);right:0;top:0;bottom:0;pointer-events:none}
+.playhead{position:absolute;left:33%;top:18px;bottom:-4px;width:2px;background:var(--phosphor);transform:translateX(-1px)}
+.playhead::before{content:"";position:absolute;left:50%;top:-6px;width:10px;height:10px;background:var(--phosphor);transform:translateX(-50%) rotate(45deg);border-radius:2px}
+@media (max-width:560px){.tl-grid{--lab:0px;grid-template-columns:minmax(0,1fr)}.tl-lab{display:none}.tl-meta{display:none}}
+
+/* ================= FEATURES (Plate) ================= */
+.band-plate{background:var(--plate) var(--scan);border-top:2px solid var(--border);border-bottom:2px solid var(--border);padding:clamp(64px,8vw,104px) 0}
+.sec-head{margin-bottom:clamp(36px,5vw,56px)}
+.feat-grid{display:grid;gap:24px;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr))}
+.feat{background:var(--cream);padding:24px 24px 20px}
+.feat header{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+.ico{width:40px;height:40px;border-radius:10px;border:2px solid var(--teal);display:grid;place-items:center;color:var(--teal-ink);flex:none;background:rgba(69,196,194,.1)}
+.ico svg{width:22px;height:22px}
+.feat h3{font-size:1.125rem;letter-spacing:.06em}
+.spec{font:400 .75rem/1.5 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--teal-ink);margin:0 0 14px;padding-bottom:12px;border-bottom:1px dashed var(--border)}
+.feat ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.feat li{position:relative;padding-left:20px;font-size:1rem}
+.feat li::before{content:"";position:absolute;left:2px;top:.62em;width:8px;height:8px;border:2px solid var(--teal);border-radius:50%}
+.feat code,.kbd{font:400 .875rem/1 var(--mono);background:var(--plate);border:1px solid var(--border);border-radius:4px;padding:1px 5px}
+.feat-wide{grid-column:1 / -1;display:flex;flex-wrap:wrap;align-items:center;gap:14px 20px;padding:18px 24px}
+.feat-wide h3{font-size:1rem;letter-spacing:.08em}
+.feat-wide p{margin:0;flex:1 1 320px}
+.keys{display:flex;gap:6px;flex-wrap:wrap}
+.keys span{font:700 .75rem/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;padding:7px 9px;border:2px solid var(--border);border-bottom-width:4px;border-radius:6px;background:var(--plate)}
+
+/* ================= HOW (Chrome) ================= */
+.band-chrome{background:var(--retro);color:var(--cream);padding:clamp(64px,8vw,104px) 0;position:relative;overflow:hidden}
+.band-chrome .eyebrow{color:var(--cream)}
+.band-chrome .rule{background:var(--mustard);opacity:1}
+.band-chrome .lede{color:var(--cream)}
+.band-chrome :focus-visible{outline-color:var(--phosphor)}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:clamp(28px,4vw,40px);counter-reset:s}
+@media (min-width:880px){.steps{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.step{position:relative;padding-top:20px;border-top:2px solid rgba(246,245,238,.35)}
+.step .num{display:block;font:700 clamp(2.75rem,5vw,3.5rem)/1 var(--mono);color:var(--mustard);letter-spacing:.02em;margin-bottom:14px}
+.step h3{font-size:1.25rem;letter-spacing:.08em;margin-bottom:10px}
+.step p{margin:0;color:var(--cream)}
+.step .kicker{display:block;font:400 .75rem/1.5 var(--mono);letter-spacing:.16em;text-transform:uppercase;margin-top:14px;color:var(--phosphor)}
+@media (min-width:880px){.step:not(:last-child)::after{content:"";position:absolute;right:-24px;top:-7px;width:12px;height:12px;border-top:2px solid rgba(246,245,238,.6);border-right:2px solid rgba(246,245,238,.6);transform:rotate(45deg);background:var(--retro)}}
+
+/* ================= DOWNLOAD (Paper + starburst) ================= */
+.download{position:relative;padding:clamp(64px,8vw,112px) 0;overflow:hidden}
+.starburst{position:absolute;left:50%;top:-120px;width:min(1100px,160vw);height:760px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(242,200,74,.55),rgba(242,200,74,.22) 45%,rgba(242,200,74,0));pointer-events:none}
+.download .wrap{position:relative}
+.dl-head{display:grid;gap:24px;align-items:end;margin-bottom:clamp(36px,5vw,52px)}
+@media (min-width:880px){.dl-head{grid-template-columns:1fr auto}}
+@media (max-width:879px){.dl-head img{display:none}}
+.dl-head img{width:96px;height:96px;border-radius:22px;box-shadow:6px 6px 0 rgba(128,76,55,.2)}
+.dl-grid{display:grid;gap:24px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));align-items:stretch}
+.dl{display:flex;flex-direction:column;padding:24px;position:relative}
+.dl-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.yours{display:none;font:700 .75rem/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--teal-ink)}
+.dl.is-detected .yours{display:inline}
+.dl h3{font-size:1.5rem;letter-spacing:.06em}
+.dl .req{font:400 .8125rem/1.5 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink);margin:6px 0 18px}
+.facts{margin:0 0 20px;display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:.9375rem}
+.facts dt{font:700 .75rem/1.9 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--teal-ink)}
+.facts dd{margin:0;overflow-wrap:anywhere}
+.facts dd.mono{font-size:.8125rem;line-height:1.9}
+.dl .btn{width:100%;text-align:left}
+.dl:not(.is-primary) .btn-dl{background:transparent;border-color:var(--retro);box-shadow:none}
+.dl:not(.is-primary) .btn-dl:hover{box-shadow:4px 4px 0 rgba(128,76,55,.35)}
+.dl.is-primary .btn-dl{background:var(--orange);border-color:var(--orange);box-shadow:4px 4px 0 var(--retro)}
+.dl.is-primary .btn-dl:hover{box-shadow:6px 6px 0 var(--retro)}
+.note{margin-top:20px;padding-top:16px;border-top:1px dashed var(--border);font-size:.9375rem}
+.note h4{font-size:.75rem;letter-spacing:.2em;color:var(--orange-ink);margin-bottom:8px}
+.note p{margin:0 0 .6em}
+.note p:last-child{margin:0}
+.term{background:var(--bezel);color:var(--phosphor);font:400 .75rem/1.5 var(--mono);border-radius:8px;padding:10px 12px;margin:0 0 .7em;white-space:pre-wrap;overflow-wrap:anywhere;position:relative;background-image:repeating-linear-gradient(0deg,rgba(168,247,201,.05) 0 2px,transparent 2px 4px)}
+.term::before{content:"$ ";color:var(--teal)}
+.dl.held{background:var(--plate)}
+.dl.held:hover{transform:none;box-shadow:var(--shadow)}
+.btn-held{display:flex;justify-content:space-between;align-items:center;gap:10px;font:700 .875rem/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;padding:15px 20px;border:2px dashed var(--border);border-radius:10px;color:rgba(41,26,20,.6);background:rgba(207,194,190,.25);cursor:not-allowed;min-height:48px}
+.held-copy{margin-top:20px;padding-top:16px;border-top:1px dashed var(--border);font-size:.9375rem;color:var(--ink)}
+.all-rel{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;margin-top:36px}
+.tlink{display:inline-flex;align-items:center;min-height:44px;font:700 .8125rem/1.3 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--teal-ink);text-decoration:none;border-bottom:2px solid var(--teal);padding:4px 0}
+.tlink:hover{color:var(--ink)}
+.oss{margin-top:clamp(40px,5vw,56px);padding:clamp(22px,3vw,32px);display:grid;gap:20px;align-items:center}
+@media (min-width:880px){.oss{grid-template-columns:auto 1fr}}
+.oss .seal{width:96px;height:96px}
+.oss h3{font-size:1.125rem;letter-spacing:.08em;margin-bottom:10px}
+.oss p{margin:0 0 .8em}
+.oss .links{display:flex;flex-wrap:wrap;gap:10px 24px;margin-top:6px}
+
+/* ================= FOOTER (Chrome) ================= */
+.foot{background:var(--retro);color:var(--cream);padding:clamp(48px,6vw,72px) 0 32px}
+.foot :focus-visible{outline-color:var(--phosphor)}
+.foot-grid{display:grid;gap:36px}
+@media (min-width:880px){.foot-grid{grid-template-columns:1.3fr 1fr 1fr}}
+.foot .brand{color:var(--ink);background:var(--cream);padding:8px 16px;border-radius:10px;box-shadow:4px 4px 0 rgba(41,26,20,.35)}
+.foot .wm{font-size:1.375rem}
+.foot p{font-size:.9375rem}
+.foot h2{font-size:.75rem;letter-spacing:.24em;margin-bottom:14px;color:var(--cream)}
+.foot ul{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.foot li a{display:inline-block;padding:12px 0}
+.foot a{text-underline-offset:3px;text-decoration-thickness:1px}
+.foot a:hover{text-decoration-thickness:2px}
+.tagline{margin-top:48px;padding-top:24px;border-top:2px solid rgba(246,245,238,.25);display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;font:700 .75rem/1.5 var(--mono);letter-spacing:.24em;text-transform:uppercase}
+.tagline span:last-child{font-weight:400;letter-spacing:.12em}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .card:hover,.btn:hover{transform:none}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="atom" viewBox="0 0 32 32">
+      <g fill="none" stroke="#45C4C2" stroke-width="2">
+        <ellipse cx="16" cy="16" rx="14" ry="5.4"/>
+        <ellipse cx="16" cy="16" rx="14" ry="5.4" transform="rotate(60 16 16)"/>
+        <ellipse cx="16" cy="16" rx="14" ry="5.4" transform="rotate(120 16 16)"/>
+      </g>
+      <circle cx="16" cy="16" r="3.4" fill="#45C4C2"/>
+    </symbol>
+  </defs>
+</svg>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="https://neatoventures.com" aria-label="Neato Ventures home">
+      <svg class="atom" aria-hidden="true" focusable="false"><use href="#atom"/></svg>
+      <span class="wm">NEATO<span class="us">_</span>VENTURES</span>
+    </a>
+    <nav aria-label="Page">
+      <ul>
+        <li class="hide-xs"><a class="nl" href="#features">Features</a></li>
+        <li class="hide-sm"><a class="nl" href="#how">How it works</a></li>
+        <li><a class="nl" href="#download">Download</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ================= HERO · PAPER ================= -->
+<section class="hero" aria-labelledby="hero-title">
+  <svg class="hero-atom" viewBox="0 0 400 400" aria-hidden="true" focusable="false">
+    <g fill="none" stroke="#45C4C2" stroke-width="1.5" opacity=".55">
+      <ellipse cx="200" cy="200" rx="190" ry="70"/>
+      <ellipse cx="200" cy="200" rx="190" ry="70" transform="rotate(60 200 200)"/>
+      <ellipse cx="200" cy="200" rx="190" ry="70" transform="rotate(120 200 200)"/>
+    </g>
+    <circle cx="200" cy="200" r="16" fill="none" stroke="#45C4C2" stroke-width="1.5" opacity=".55"/>
+  </svg>
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <div class="product">
+        <img src="media/icon-64.png" width="44" height="44" alt="">
+        <p class="label" style="margin:0">Recordly <span class="by">Free and open source · AGPL-3.0</span></p>
+      </div>
+      <p class="eyebrow">★ Screen recorder · Live ★</p>
+      <h1 id="hero-title" class="h-hero">Record the screen. Polish the take.</h1>
+      <p class="lede">Recordly is a desktop screen recorder and editor for walkthroughs, demos and product videos. It adds zooms, cursor polish and styled backgrounds without a motion designer.</p>
+      <div class="btn-row">
+        <a class="btn btn-primary" id="hero-dl" href="https://github.com/markhiltonapps/Recordly/releases/latest/download/Recordly-windows-x64.exe">
+          <span id="hero-dl-label">Download for Windows</span>
+          <small id="hero-dl-meta">x64 · About 199 MB</small>
+        </a>
+        <a class="btn" href="#features">See the features</a>
+      </div>
+      <p class="hero-note" id="hero-alt">Also on <a href="#dl-linux">Linux as an AppImage</a>. macOS is coming soon.</p>
+      <p class="hero-note mobile-note">Recordly is a desktop app. Download it on your Windows or Linux computer.</p>
+      <p class="hero-note mac-note">On a Mac? The macOS build isn't ready yet. Windows and Linux builds are below.</p>
+    </div>
+
+    <figure class="editor" role="img" aria-label="Illustration of the Recordly editor. A recorded app window sits on a skyline wallpaper, the cursor clicks a button inside a 2x zoom region, and the timeline below shows zoom, trim and speed regions. A webcam bubble sits in the corner.">
+      <div class="ed-bar" aria-hidden="true">
+        <span class="dots"><i></i><i></i><i></i></span>
+        <img src="media/icon-64.png" width="18" height="18" alt="">
+        <span class="ed-title">LAUNCH-DEMO.RECORDLY</span>
+        <span class="ed-meta">1920×1080 · 16:9</span>
+      </div>
+      <div class="ed-body" aria-hidden="true">
+        <div class="stage">
+          <svg viewBox="0 0 640 360" preserveAspectRatio="xMidYMid slice" focusable="false">
+            <defs>
+              <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#45C4C2" stop-opacity=".62"/>
+                <stop offset=".8" stop-color="#45C4C2" stop-opacity=".06"/>
+              </linearGradient>
+              <radialGradient id="sun" cx="560" cy="58" r="190" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#F2C84A" stop-opacity=".95"/>
+                <stop offset=".4" stop-color="#F2C84A" stop-opacity=".45"/>
+                <stop offset="1" stop-color="#F2C84A" stop-opacity="0"/>
+              </radialGradient>
+              <mask id="focus">
+                <rect width="640" height="360" fill="#F6F5EE"/>
+                <rect x="248" y="132" width="320" height="180" rx="6" fill="#291A14"/>
+              </mask>
+              <clipPath id="appclip"><rect x="64" y="36" width="512" height="288" rx="10"/></clipPath>
+              <clipPath id="camclip"><circle cx="68" cy="296" r="38"/></clipPath>
+              <path id="arrow" d="M0 0 L0 23 L6.2 17.4 L10.6 27 L14.6 25.2 L10.3 15.9 L18 15.9 Z"/>
+            </defs>
+
+            <!-- wallpaper: washed tomorrowland -->
+            <rect width="640" height="360" fill="#F6F5EE"/>
+            <rect width="640" height="360" fill="url(#sky)"/>
+            <rect width="640" height="360" fill="url(#sun)"/>
+            <g fill="none" stroke="#804C37" stroke-width="1.5" opacity=".35">
+              <ellipse cx="32" cy="70" rx="24" ry="9"/>
+              <ellipse cx="32" cy="70" rx="24" ry="9" transform="rotate(60 32 70)"/>
+              <ellipse cx="32" cy="70" rx="24" ry="9" transform="rotate(120 32 70)"/>
+            </g>
+            <circle cx="32" cy="70" r="3.5" fill="#804C37" opacity=".35"/>
+            <g fill="#804C37" opacity=".3">
+              <!-- left tower -->
+              <rect x="28" y="176" width="6" height="184"/>
+              <ellipse cx="31" cy="176" rx="24" ry="6.5"/>
+              <rect x="30" y="148" width="2" height="24"/>
+              <ellipse cx="31" cy="198" rx="12" ry="3.5"/>
+              <path d="M16 360 L28 250 L34 250 L46 360 Z"/>
+              <!-- right tower -->
+              <rect x="604" y="120" width="6" height="240"/>
+              <ellipse cx="607" cy="120" rx="22" ry="6"/>
+              <rect x="606" y="94" width="2" height="22"/>
+              <!-- low googie skyline along the bottom -->
+              <path d="M0 360 L0 336 L40 336 L70 322 L100 336 L150 336 L150 328 L210 328 Q240 314 270 328 L330 328 L330 334 L380 334 L420 318 L460 334 L520 334 L520 326 L560 326 L600 338 L640 338 L640 360 Z"/>
+            </g>
+
+            <!-- recorded window: padding, rounded corners, hard shadow -->
+            <rect x="71" y="43" width="512" height="288" rx="10" fill="#804C37" opacity=".38"/>
+            <g clip-path="url(#appclip)">
+              <rect x="64" y="36" width="512" height="288" fill="#F6F5EE"/>
+              <rect x="64" y="36" width="512" height="22" fill="#F0EEE6"/>
+              <line x1="64" y1="58" x2="576" y2="58" stroke="#CFC2BE" stroke-width="1.5"/>
+              <circle cx="80" cy="47" r="3.5" fill="#804C37"/><circle cx="92" cy="47" r="3.5" fill="#F2C84A"/><circle cx="104" cy="47" r="3.5" fill="#45C4C2"/>
+              <rect x="240" y="42" width="160" height="10" rx="5" fill="#291A14" opacity=".08"/>
+              <!-- sidebar -->
+              <rect x="64" y="58" width="100" height="266" fill="#291A14" opacity=".05"/>
+              <rect x="78" y="72" width="44" height="8" rx="4" fill="#291A14" opacity=".55"/>
+              <rect x="72" y="92" width="84" height="18" rx="5" fill="#45C4C2" opacity=".35"/>
+              <rect x="80" y="97" width="52" height="8" rx="4" fill="#1E6B6B" opacity=".8"/>
+              <rect x="80" y="120" width="60" height="8" rx="4" fill="#291A14" opacity=".16"/>
+              <rect x="80" y="140" width="48" height="8" rx="4" fill="#291A14" opacity=".16"/>
+              <rect x="80" y="160" width="56" height="8" rx="4" fill="#291A14" opacity=".16"/>
+              <rect x="80" y="180" width="40" height="8" rx="4" fill="#291A14" opacity=".16"/>
+              <!-- page header -->
+              <rect x="184" y="74" width="150" height="12" rx="3" fill="#291A14" opacity=".78"/>
+              <rect x="184" y="92" width="230" height="7" rx="3" fill="#291A14" opacity=".22"/>
+              <!-- stat cards -->
+              <g stroke="#CFC2BE" stroke-width="1.5" fill="#F6F5EE">
+                <rect x="184" y="110" width="116" height="56" rx="6"/>
+                <rect x="310" y="110" width="116" height="56" rx="6"/>
+                <rect x="436" y="110" width="116" height="56" rx="6"/>
+              </g>
+              <g fill="#291A14">
+                <rect x="194" y="120" width="40" height="6" rx="3" opacity=".25"/>
+                <rect x="194" y="134" width="54" height="12" rx="3" opacity=".8"/>
+                <rect x="320" y="120" width="46" height="6" rx="3" opacity=".25"/>
+                <rect x="320" y="134" width="40" height="12" rx="3" opacity=".8"/>
+                <rect x="446" y="120" width="36" height="6" rx="3" opacity=".25"/>
+                <rect x="446" y="134" width="50" height="12" rx="3" opacity=".8"/>
+              </g>
+              <g fill="none" stroke="#1E6B6B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="256,152 264,146 272,149 280,140 290,142"/>
+                <polyline points="372,150 380,152 388,144 398,146 414,138"/>
+                <polyline points="504,154 512,148 520,150 530,141 542,136"/>
+              </g>
+              <!-- chart panel -->
+              <rect x="184" y="178" width="236" height="126" rx="6" fill="#F6F5EE" stroke="#CFC2BE" stroke-width="1.5"/>
+              <rect x="196" y="190" width="70" height="7" rx="3" fill="#291A14" opacity=".3"/>
+              <g fill="#45C4C2" opacity=".6">
+                <rect x="200" y="254" width="16" height="36" rx="2"/>
+                <rect x="226" y="240" width="16" height="50" rx="2"/>
+                <rect x="252" y="262" width="16" height="28" rx="2"/>
+                <rect x="278" y="232" width="16" height="58" rx="2"/>
+                <rect x="304" y="246" width="16" height="44" rx="2"/>
+              </g>
+              <g fill="#1E6B6B">
+                <rect x="330" y="224" width="16" height="66" rx="2"/>
+                <rect x="356" y="214" width="16" height="76" rx="2"/>
+                <rect x="382" y="206" width="16" height="84" rx="2"/>
+              </g>
+              <line x1="196" y1="290.5" x2="408" y2="290.5" stroke="#291A14" stroke-opacity=".3" stroke-width="1.5"/>
+              <!-- side panel with the button -->
+              <rect x="432" y="178" width="120" height="126" rx="6" fill="#F6F5EE" stroke="#CFC2BE" stroke-width="1.5"/>
+              <g fill="#291A14">
+                <circle cx="448" cy="196" r="5" fill="#45C4C2"/><rect x="460" y="193" width="72" height="6" rx="3" opacity=".3"/>
+                <circle cx="448" cy="214" r="5" fill="#45C4C2"/><rect x="460" y="211" width="58" height="6" rx="3" opacity=".3"/>
+                <circle cx="448" cy="232" r="5" fill="#CFC2BE"/><rect x="460" y="229" width="64" height="6" rx="3" opacity=".3"/>
+              </g>
+              <rect x="444" y="266" width="96" height="26" rx="6" fill="#1E6B6B"/>
+              <rect x="466" y="277" width="52" height="4" rx="2" fill="#F6F5EE"/>
+            </g>
+
+            <!-- zoom focus: dim outside, frame with corner brackets -->
+            <rect width="640" height="360" fill="#291A14" opacity=".2" mask="url(#focus)"/>
+            <rect x="248" y="132" width="320" height="180" rx="6" fill="none" stroke="#1E6B6B" stroke-width="1.5" stroke-dasharray="6 5" opacity=".8"/>
+            <g fill="none" stroke="#1E6B6B" stroke-width="4" stroke-linecap="round">
+              <path d="M248 152 V132 H268"/><path d="M548 132 H568 V152"/>
+              <path d="M568 292 V312 H548"/><path d="M268 312 H248 V292"/>
+            </g>
+
+            <!-- cursor: smoothed path, ghost trail, click bounce -->
+            <path d="M318 226 C 372 238, 420 296, 494 280" fill="none" stroke="#1E6B6B" stroke-width="2" stroke-dasharray="1 7" stroke-linecap="round"/>
+            <g stroke="#F6F5EE" stroke-width="1.6" stroke-linejoin="round" fill="#291A14">
+              <use href="#arrow" transform="translate(318 226)" opacity=".16"/>
+              <use href="#arrow" transform="translate(406 268)" opacity=".32"/>
+            </g>
+            <circle cx="498" cy="283" r="20" fill="none" stroke="#45C4C2" stroke-width="2" opacity=".55"/>
+            <circle cx="498" cy="283" r="11" fill="none" stroke="#45C4C2" stroke-width="3"/>
+            <g stroke="#F6F5EE" stroke-width="1.8" stroke-linejoin="round" fill="#291A14">
+              <use href="#arrow" transform="translate(498 283) scale(1.15)"/>
+            </g>
+
+            <!-- webcam bubble -->
+            <circle cx="73" cy="301" r="38" fill="#804C37" opacity=".35"/>
+            <circle cx="68" cy="296" r="38" fill="#804C37"/>
+            <g clip-path="url(#camclip)" fill="#F0EEE6" opacity=".85">
+              <circle cx="68" cy="286" r="13"/>
+              <ellipse cx="68" cy="330" rx="29" ry="22"/>
+            </g>
+            <circle cx="68" cy="296" r="38" fill="none" stroke="#45C4C2" stroke-width="3"/>
+          </svg>
+          <span class="zoom-tag">ZOOM 2.0×</span>
+        </div>
+
+        <div class="panel">
+          <span class="ph">INSPECTOR</span>
+          <div class="set"><span class="k">ZOOM <b>2.0×</b></span><span class="slider" style="--v:50%"></span></div>
+          <div class="set"><span class="k">SMOOTHING <b>72</b></span><span class="slider" style="--v:72%"></span></div>
+          <div class="set"><span class="row"><span class="k">CLICK BOUNCE</span><span class="toggle"></span></span></div>
+          <div class="set"><span class="k">PADDING <b>48</b></span><span class="slider" style="--v:40%"></span></div>
+          <div class="set"><span class="k">WALLPAPER</span><span class="swatches"><i></i><i></i><i></i><i></i></span></div>
+        </div>
+      </div>
+
+      <div class="tl" aria-hidden="true">
+        <div class="tl-head">
+          <span class="tl-play"><svg viewBox="0 0 10 10"><path d="M2 1 L9 5 L2 9 Z" fill="#A8F7C9"/></svg></span>
+          <span class="tl-tc"><b>00:21.45</b> / 01:05.00</span>
+          <span class="tl-meta">AUTO ZOOM · ON</span>
+        </div>
+        <div class="tl-grid">
+          <span class="tl-lab"></span>
+          <div class="lane ruler">
+            <span style="--x:0">00:00</span><span style="--x:23.08">00:15</span><span style="--x:46.15">00:30</span><span style="--x:69.23">00:45</span><span style="--x:92.3">01:00</span>
+          </div>
+          <span class="tl-lab">VIDEO</span>
+          <div class="lane">
+            <div class="clip"></div>
+            <div class="rg trim" style="--a:41.5;--b:56.9"><span>TRIM</span></div>
+          </div>
+          <span class="tl-lab">EFFECTS</span>
+          <div class="lane">
+            <div class="rg zoom" style="--a:9.2;--b:36.9"><span>ZOOM 2.0×</span></div>
+            <div class="rg speed" style="--a:61.5;--b:95.4"><span>SPEED 1.5×</span></div>
+          </div>
+          <span class="tl-lab">AUDIO</span>
+          <div class="lane">
+            <svg class="wave" viewBox="0 0 200 20" preserveAspectRatio="none" focusable="false"><path d="M0.5 8.4v3.1M2.5 7.6v4.7M4.5 8.1v3.9M6.5 7.2v5.5M8.5 6.1v7.9M10.5 5.3v9.4M12.5 6.7v6.6M14.5 2.6v14.7M16.5 3.7v12.6M18.5 4.4v11.3M20.5 4.9v10.2M22.5 2.2v15.6M24.5 2.9v14.2M26.5 6.1v7.8M28.5 4.1v11.7M30.5 5.7v8.6M32.5 4.1v11.8M34.5 6.7v6.6M36.5 5.7v8.7M38.5 6.5v7.0M40.5 7.9v4.2M42.5 8.6v2.8M44.5 7.8v4.4M46.5 6.8v6.3M48.5 8.0v3.9M50.5 6.6v6.7M52.5 4.2v11.5M54.5 6.6v6.9M56.5 5.2v9.6M58.5 4.2v11.6M60.5 3.3v13.5M62.5 5.0v9.9M64.5 5.5v9.0M66.5 1.1v17.8M68.5 4.0v11.9M70.5 5.3v9.4M72.5 3.9v12.2M74.5 5.3v9.5M76.5 6.4v7.2M78.5 4.2v11.5M80.5 6.4v7.2M82.5 6.9v6.1M84.5 8.9v2.3M86.5 7.7v4.6M88.5 8.8v2.4M90.5 7.8v4.5M92.5 8.3v3.5M94.5 8.6v2.9M96.5 7.9v4.3M98.5 8.1v3.7M100.5 7.4v5.2M102.5 7.5v4.9M104.5 8.5v3.1M106.5 8.3v3.4M108.5 7.8v4.4M110.5 8.5v3.0M112.5 8.6v2.8M114.5 4.4v11.3M116.5 3.2v13.6M118.5 3.8v12.5M120.5 2.9v14.3M122.5 6.0v7.9M124.5 6.1v7.8M126.5 6.5v7.0M128.5 7.3v5.5M130.5 7.1v5.8M132.5 8.5v3.1M134.5 7.9v4.3M136.5 7.7v4.7M138.5 7.2v5.5M140.5 5.0v10.0M142.5 6.8v6.4M144.5 5.9v8.3M146.5 3.2v13.7M148.5 2.3v15.4M150.5 1.4v17.1M152.5 1.5v17.1M154.5 1.8v16.5M156.5 2.4v15.1M158.5 3.2v13.7M160.5 3.9v12.3M162.5 6.7v6.6M164.5 5.6v8.7M166.5 5.9v8.2M168.5 6.9v6.2M170.5 6.8v6.4M172.5 6.7v6.7M174.5 7.3v5.4M176.5 8.7v2.6M178.5 6.8v6.3M180.5 8.3v3.4M182.5 6.9v6.3M184.5 5.5v8.9M186.5 5.5v8.9M188.5 6.7v6.7M190.5 2.1v15.8M192.5 4.3v11.3M194.5 1.9v16.1M196.5 3.3v13.4M198.5 3.9v12.3" stroke="#A8F7C9" stroke-width="1.1" fill="none" opacity=".85"/></svg>
+          </div>
+          <div class="ph-col"><span class="playhead"></span></div>
+        </div>
+      </div>
+    </figure>
+  </div>
+</section>
+
+<!-- ================= FEATURES · PLATE ================= -->
+<section class="band-plate" id="features" aria-labelledby="features-title">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="rule" aria-hidden="true"></span>
+      <p class="eyebrow">★ Features · Live in 1.4.0 ★</p>
+      <h2 id="features-title" class="h-section">From raw take to finished video.</h2>
+      <p class="lede">One free app covers capture, a timeline editor, cursor and webcam styling, framing and export.</p>
+    </div>
+
+    <div class="feat-grid">
+      <article class="card feat">
+        <header>
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4" fill="currentColor"/></svg></span>
+          <h3>Record</h3>
+        </header>
+        <p class="spec">Display · Window · Mic · System audio</p>
+        <ul>
+          <li>Record a whole display or a single app window.</li>
+          <li>Capture your microphone and system audio.</li>
+          <li>Go straight from recording into the editor.</li>
+          <li>On Windows, a native Windows Graphics Capture helper and native WASAPI audio.</li>
+        </ul>
+      </article>
+
+      <article class="card feat">
+        <header>
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12"/></svg></span>
+          <h3>Edit</h3>
+        </header>
+        <p class="spec">Trim · Zoom · Speed · Annotate</p>
+        <ul>
+          <li>A drag-and-drop timeline. Trim the parts you don't want.</li>
+          <li>Draw zoom regions yourself, or take automatic suggestions based on cursor activity.</li>
+          <li>Speed-up and slow-down regions, plus extra audio regions.</li>
+          <li>Text, image and figure annotations. Crop the frame.</li>
+          <li>Save and reopen <code>.recordly</code> project files with the editor state kept.</li>
+        </ul>
+      </article>
+
+      <article class="card feat">
+        <header>
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 3l7 17 2.5-7.5L21 10z"/><path d="M14 14l6 6" stroke-linecap="round"/></svg></span>
+          <h3>Cursor</h3>
+        </header>
+        <p class="spec">Size · Smoothing · Blur · Bounce</p>
+        <ul>
+          <li>Show or hide the rendered cursor.</li>
+          <li>Set its size, smoothing, motion blur, click bounce and sway.</li>
+          <li>Loop mode for cleaner looping exports.</li>
+          <li>macOS-style cursor assets.</li>
+        </ul>
+      </article>
+
+      <article class="card feat">
+        <header>
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="10" r="7"/><circle cx="12" cy="10" r="2.5"/><path d="M8 21h8M12 17v4"/></svg></span>
+          <h3>Webcam</h3>
+        </header>
+        <p class="spec">Bubble · Mirror · Place · Scale</p>
+        <ul>
+          <li>A webcam bubble that can be mirrored.</li>
+          <li>Set its size, pick a preset position or place it by X/Y.</li>
+          <li>Adjust margin, roundness and shadow.</li>
+          <li>Optional scaling that reacts to zoom.</li>
+        </ul>
+      </article>
+
+      <article class="card feat">
+        <header>
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="3"/><rect x="7" y="8" width="10" height="8" rx="1.5"/></svg></span>
+          <h3>Frame</h3>
+        </header>
+        <p class="spec">Wallpaper · Padding · Corners · Ratio</p>
+        <ul>
+          <li>Built-in wallpapers, your own uploaded backgrounds, solid colours and gradients.</li>
+          <li>Padding, rounded corners, background blur and drop shadows.</li>
+          <li>Aspect ratio presets.</li>
+        </ul>
+      </article>
+
+      <article class="card feat">
+        <header>
+          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 20h14"/></svg></span>
+          <h3>Export</h3>
+        </header>
+        <p class="spec">MP4 · GIF · Quality · Size</p>
+        <ul>
+          <li>Export to MP4 or GIF, and choose the quality.</li>
+          <li>GIF frame rate, loop toggle and size presets.</li>
+          <li>Control the output dimensions.</li>
+          <li>Reveal the finished file in your system's file manager.</li>
+        </ul>
+      </article>
+
+      <div class="card feat feat-wide">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg></span>
+        <h3>Shortcuts</h3>
+        <p>Keyboard shortcuts are customisable, and the app has a built-in shortcut reference.</p>
+        <span class="keys" aria-hidden="true"><span>Customisable</span><span>In-app reference</span></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= HOW IT WORKS · CHROME ================= -->
+<section class="band-chrome" id="how" aria-labelledby="how-title">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="rule" aria-hidden="true"></span>
+      <p class="eyebrow">★ How it works · Three steps ★</p>
+      <h2 id="how-title" class="h-section">Record. Edit. Export.</h2>
+    </div>
+    <ol class="steps">
+      <li class="step">
+        <span class="num" aria-hidden="true">01</span>
+        <h3>Record</h3>
+        <p>Pick a whole display or one app window. Recordly can capture your mic and system audio. When you stop, the recording opens in the editor.</p>
+        <span class="kicker">Display or window · Mic + system audio</span>
+      </li>
+      <li class="step">
+        <span class="num" aria-hidden="true">02</span>
+        <h3>Edit</h3>
+        <p>Trim the dead air. Accept the suggested zooms or draw your own. Speed up the slow parts, tidy the cursor and set the background.</p>
+        <span class="kicker">Zoom · Trim · Speed · Cursor</span>
+      </li>
+      <li class="step">
+        <span class="num" aria-hidden="true">03</span>
+        <h3>Export</h3>
+        <p>Choose MP4 or GIF, set the quality and size, and export. Recordly can show you the file in your file manager when it's done.</p>
+        <span class="kicker">MP4 or GIF · Your dimensions</span>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- ================= DOWNLOAD · PAPER + STARBURST ================= -->
+<section class="download" id="download" aria-labelledby="download-title">
+  <div class="starburst" aria-hidden="true"></div>
+  <div class="wrap">
+    <div class="dl-head">
+      <div>
+        <span class="rule" aria-hidden="true"></span>
+        <p class="eyebrow">★ Download · Release 1.4.0 ★</p>
+        <h2 id="download-title" class="h-section">Get Recordly.</h2>
+        <p class="lede">Free and open source. Pick your system. Every release, with checksums, is listed on GitHub.</p>
+      </div>
+      <img src="media/icon-256.png" width="96" height="96" alt="Recordly app icon: a white flower-like mark on a blue rounded square">
+    </div>
+
+    <div class="dl-grid">
+      <article class="card dl is-primary" id="dl-windows" data-os="windows">
+        <div class="dl-top"><span class="chip chip-live">Live</span><span class="yours">★ Your system</span></div>
+        <h3>Windows</h3>
+        <p class="req">Windows 10 (build 19041+) or <span class="nw">11 · x64</span></p>
+        <dl class="facts">
+          <dt>File</dt><dd class="mono">Recordly-windows-x64.exe</dd>
+          <dt>Size</dt><dd>About 199 MB</dd>
+        </dl>
+        <a class="btn btn-dl" href="https://github.com/markhiltonapps/Recordly/releases/latest/download/Recordly-windows-x64.exe">Download for Windows<small>Installer · About 199 MB</small></a>
+        <div class="note">
+          <h4>Before you install</h4>
+          <p>The installer isn't code-signed yet, so SmartScreen may say “Windows protected your PC”. Choose <strong>More info</strong>, then <strong>Run anyway</strong>.</p>
+        </div>
+      </article>
+
+      <article class="card dl" id="dl-linux" data-os="linux">
+        <div class="dl-top"><span class="chip chip-live">Live</span><span class="yours">★ Your system</span></div>
+        <h3>Linux</h3>
+        <p class="req">x64 · AppImage · Modern distros</p>
+        <dl class="facts">
+          <dt>File</dt><dd class="mono">Recordly-linux-x64.AppImage</dd>
+          <dt>Size</dt><dd>About 224 MB</dd>
+        </dl>
+        <a class="btn btn-dl" href="https://github.com/markhiltonapps/Recordly/releases/latest/download/Recordly-linux-x64.AppImage">Download for Linux<small>AppImage · About 224 MB</small></a>
+        <div class="note">
+          <h4>Before you run it</h4>
+          <p>Make the file executable, then run it:</p>
+          <pre class="term">chmod +x Recordly-linux-x64.AppImage</pre>
+          <p>Hiding the cursor while recording isn't supported on Linux.</p>
+        </div>
+      </article>
+
+      <article class="card dl held" aria-labelledby="mac-title">
+        <div class="dl-top"><span class="chip chip-soon">Coming soon</span></div>
+        <h3 id="mac-title">macOS</h3>
+        <p class="req">Not released yet</p>
+        <span class="btn-held">Download for macOS · Coming soon<span class="sr-only"> (not available yet)</span></span>
+        <p class="held-copy">The macOS build isn't ready. When it is, it will be listed on the releases page.</p>
+      </article>
+    </div>
+
+    <div class="all-rel">
+      <a class="tlink" href="https://github.com/markhiltonapps/Recordly/releases">All Recordly releases and checksums&nbsp;→</a>
+    </div>
+
+    <aside class="card oss" id="source" aria-labelledby="oss-title">
+      <svg class="seal" viewBox="0 0 96 96" aria-hidden="true" focusable="false">
+        <circle cx="48" cy="48" r="44" fill="none" stroke="#1E6B6B" stroke-width="2" stroke-dasharray="3 5"/>
+        <g fill="none" stroke="#45C4C2" stroke-width="2">
+          <ellipse cx="48" cy="48" rx="32" ry="12"/>
+          <ellipse cx="48" cy="48" rx="32" ry="12" transform="rotate(60 48 48)"/>
+          <ellipse cx="48" cy="48" rx="32" ry="12" transform="rotate(120 48 48)"/>
+        </g>
+        <circle cx="48" cy="48" r="7" fill="#45C4C2"/>
+      </svg>
+      <div>
+        <p class="eyebrow" style="margin-bottom:8px">★ Open source · AGPL-3.0 ★</p>
+        <h3 id="oss-title">Who made Recordly.</h3>
+        <p>Recordly is open-source software created by webadderall and contributors, licensed under the GNU Affero General Public License v3.0. Neato Ventures packages and distributes this build.</p>
+        <div class="links">
+          <a class="tlink" href="https://github.com/webadderallorg/Recordly">Original Recordly project on GitHub</a>
+          <a class="tlink" href="https://github.com/markhiltonapps/Recordly">Source code for this build</a>
+          <a class="tlink" href="https://www.gnu.org/licenses/agpl-3.0.html">Read the AGPL-3.0 licence</a>
+        </div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+</main>
+
+<!-- ================= FOOTER · CHROME ================= -->
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <a class="brand" href="https://neatoventures.com" aria-label="Neato Ventures home">
+          <svg class="atom" aria-hidden="true" focusable="false"><use href="#atom"/></svg>
+          <span class="wm">NEATO<span class="us">_</span>VENTURES</span>
+        </a>
+        <p style="margin-top:16px">Recordly is created by webadderall and contributors and licensed under AGPL-3.0. This build is distributed by Neato Ventures.</p>
+      </div>
+      <nav aria-labelledby="foot-rec">
+        <h2 id="foot-rec">Recordly</h2>
+        <ul>
+          <li><a href="https://github.com/webadderallorg/Recordly">Original project by webadderall and contributors</a></li>
+          <li><a href="https://github.com/markhiltonapps/Recordly">Source code for this build</a></li>
+          <li><a href="https://github.com/markhiltonapps/Recordly/releases">All releases and checksums</a></li>
+        </ul>
+      </nav>
+      <nav aria-labelledby="foot-lic">
+        <h2 id="foot-lic">Licence</h2>
+        <ul>
+          <li><a href="https://www.gnu.org/licenses/agpl-3.0.html">GNU AGPL-3.0 licence text</a></li>
+        </ul>
+      </nav>
+    </div>
+    <div class="tagline">
+      <span>★ The future is Neato ★</span>
+      <span>Neato Ventures · Houston, Texas</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var ua = navigator.userAgent || "";
+  var plat = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || "";
+  var s = plat + " " + ua, os = "";
+  if (/Win/i.test(s)) os = "windows";
+  else if (/Android|CrOS|iPhone|iPad/i.test(s)) os = "";
+  else if (/Mac/i.test(s)) os = "mac";
+  else if (/Linux|X11/i.test(s)) os = "linux";
+  document.documentElement.setAttribute("data-os", os);
+  if (/Android|iPhone|iPad|iPod/i.test(ua)) document.documentElement.setAttribute("data-mobile", "");
+  var win = document.getElementById("dl-windows"), lin = document.getElementById("dl-linux");
+  if (os === "windows") win.classList.add("is-detected");
+  if (os === "linux") {
+    lin.classList.add("is-detected", "is-primary");
+    win.classList.remove("is-primary");
+    lin.parentNode.insertBefore(lin, win);
+    var a = document.getElementById("hero-dl");
+    a.href = "https://github.com/markhiltonapps/Recordly/releases/latest/download/Recordly-linux-x64.AppImage";
+    document.getElementById("hero-dl-label").textContent = "Download for Linux";
+    document.getElementById("hero-dl-meta").textContent = "x64 · About 224 MB";
+    document.getElementById("hero-alt").innerHTML = 'Also for <a href="#dl-windows">Windows 10 and 11</a>. macOS is coming soon.';
+  }
+})();
+</script>
+</body>
+</html>
